@@ -1,0 +1,13 @@
+/Users/js/programs/learnrust/grrs/target/debug/deps/quote-2a62d1f475f3c5f8.rmeta: /Users/js/.cargo/registry/src/github.com-1ecc6299db9ec823/quote-1.0.4/src/lib.rs /Users/js/.cargo/registry/src/github.com-1ecc6299db9ec823/quote-1.0.4/src/ext.rs /Users/js/.cargo/registry/src/github.com-1ecc6299db9ec823/quote-1.0.4/src/format.rs /Users/js/.cargo/registry/src/github.com-1ecc6299db9ec823/quote-1.0.4/src/ident_fragment.rs /Users/js/.cargo/registry/src/github.com-1ecc6299db9ec823/quote-1.0.4/src/to_tokens.rs /Users/js/.cargo/registry/src/github.com-1ecc6299db9ec823/quote-1.0.4/src/runtime.rs /Users/js/.cargo/registry/src/github.com-1ecc6299db9ec823/quote-1.0.4/src/spanned.rs
+
+/Users/js/programs/learnrust/grrs/target/debug/deps/libquote-2a62d1f475f3c5f8.rlib: /Users/js/.cargo/registry/src/github.com-1ecc6299db9ec823/quote-1.0.4/src/lib.rs /Users/js/.cargo/registry/src/github.com-1ecc6299db9ec823/quote-1.0.4/src/ext.rs /Users/js/.cargo/registry/src/github.com-1ecc6299db9ec823/quote-1.0.4/src/format.rs /Users/js/.cargo/registry/src/github.com-1ecc6299db9ec823/quote-1.0.4/src/ident_fragment.rs /Users/js/.cargo/registry/src/github.com-1ecc6299db9ec823/quote-1.0.4/src/to_tokens.rs /Users/js/.cargo/registry/src/github.com-1ecc6299db9ec823/quote-1.0.4/src/runtime.rs /Users/js/.cargo/registry/src/github.com-1ecc6299db9ec823/quote-1.0.4/src/spanned.rs
+
+/Users/js/programs/learnrust/grrs/target/debug/deps/quote-2a62d1f475f3c5f8.d: /Users/js/.cargo/registry/src/github.com-1ecc6299db9ec823/quote-1.0.4/src/lib.rs /Users/js/.cargo/registry/src/github.com-1ecc6299db9ec823/quote-1.0.4/src/ext.rs /Users/js/.cargo/registry/src/github.com-1ecc6299db9ec823/quote-1.0.4/src/format.rs /Users/js/.cargo/registry/src/github.com-1ecc6299db9ec823/quote-1.0.4/src/ident_fragment.rs /Users/js/.cargo/registry/src/github.com-1ecc6299db9ec823/quote-1.0.4/src/to_tokens.rs /Users/js/.cargo/registry/src/github.com-1ecc6299db9ec823/quote-1.0.4/src/runtime.rs /Users/js/.cargo/registry/src/github.com-1ecc6299db9ec823/quote-1.0.4/src/spanned.rs
+
+/Users/js/.cargo/registry/src/github.com-1ecc6299db9ec823/quote-1.0.4/src/lib.rs:
+/Users/js/.cargo/registry/src/github.com-1ecc6299db9ec823/quote-1.0.4/src/ext.rs:
+/Users/js/.cargo/registry/src/github.com-1ecc6299db9ec823/quote-1.0.4/src/format.rs:
+/Users/js/.cargo/registry/src/github.com-1ecc6299db9ec823/quote-1.0.4/src/ident_fragment.rs:
+/Users/js/.cargo/registry/src/github.com-1ecc6299db9ec823/quote-1.0.4/src/to_tokens.rs:
+/Users/js/.cargo/registry/src/github.com-1ecc6299db9ec823/quote-1.0.4/src/runtime.rs:
+/Users/js/.cargo/registry/src/github.com-1ecc6299db9ec823/quote-1.0.4/src/spanned.rs:
