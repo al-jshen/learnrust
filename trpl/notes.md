@@ -147,4 +147,50 @@ let y = if 5 { 10 } else { 15 };  // y is 10
 
 If there is no `else`, then the return value is `()`.
 
+## Loops
+
+Use for loops to loop over an iterable:
+```rust
+for i in 0..10 {
+	println!("{}", x);
+}
+```
+where `0..10` gives an iterable range.  
+
+Use `.enumerate()` to keep track of how many times you have looped:
+```rust
+for (i, j) in (2..5).enumerate() {
+	println!("{} {}", i, j)
+}
+
+// Output: 
+// 0 2
+// 1 3
+// 2 4
+```
+
+Use `while` for while loops. Keep looping while some condition holds. 
+```rust
+let mut x = 5;
+let mut done = false;
+
+while !done {
+	x += 1;
+	if x % 10 == 0 {
+		done = true;
+	}
+}
+```
+
+Use `loop` for infinite loops (instead of writing `while true`)
+```rust
+loop {
+	println!("loop forever")
+}
+```
+
+Use `break` to break out of the loop (can combine with `loop` instead of explicitly defining a `done` condition). 
+
+Use `continue` to skip to the next iteration.
+
 
