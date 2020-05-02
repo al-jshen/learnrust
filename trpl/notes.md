@@ -1,8 +1,10 @@
-% **Rust: Syntax and Semantics**
+% **Rust**
 % Jeff Shen
 % Last revised \today
 
 \newpage
+
+# Basic Concepts
 
 ## Variable Bindings
 
@@ -193,4 +195,5 @@ Use `break` to break out of the loop (can combine with `loop` instead of explici
 
 Use `continue` to skip to the next iteration.
 
+# Ownership
 
