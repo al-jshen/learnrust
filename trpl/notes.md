@@ -1,6 +1,12 @@
-% **Rust**
-% Jeff Shen
-% Last revised \today
+---
+header-includes: |
+    \usepackage{caption}
+    \usepackage{subcaption}
+	\usepackage{graphicx}
+title: \textbf{Rust}\vspace{1cm}\hrule
+author: Jeff Shen
+date: Last revised \today
+---
 
 \newpage
 
@@ -75,7 +81,7 @@ let six = f(1, 5);
 ## Primitive Types
 
 ### Boolean 
-(`bool`): `true` or `false`
+`bool`: `true` or `false`
 
 ### char
 A single Unicode value. Created with `''`.
@@ -196,4 +202,132 @@ Use `break` to break out of the loop (can combine with `loop` instead of explici
 Use `continue` to skip to the next iteration.
 
 # Ownership
+
+Rust follows three ownership rules:
+
+1. Each value has a variable called an **owner**.
+2. There can only be one owner at a time. 
+3. When the owner goes out of scope, the value is dropped. 
+
+## Stack vs heap
+
+The stack stores values in a stack-like structure: last in, first out. Adding data to the stack is called pushing to the stack, and removing data is called popping off the stack. Data stored on the stack must have a known, fixed size. 
+
+When storing data on the heap, a certain amount of memory is requested. The heap finds a place large enough, marks it as being used, and then returns a **pointer**, which gives the address of that place. This is called **allocation**. To get the data, you follow the pointer to get to the address. 
+
+Pushing to the stack is faster than allocating on the heap because there is no need to search for free space: the location is always the top of the stack. Similarly, accessing data is also faster, because you don't need to follow a pointer. 
+
+Function parameters and variables inside functions are pushed to the stack, and then popped off the stack once the function has completed. 
+
+## Variable scope
+
+The **scope** is the range in which an item is valid. A scope can be created with `{}`.
+```rust
+{ // create a new scope 
+	let s = "hello"; // s is valid here.
+	// do stuff with s.
+} // scope is over. s no longer valid.
+```
+
+A variable is valid when it comes into scope, and remains valid until it goes out of scope. 
+
+## `String` type
+
+The `String` type is stored on the heap (and thus is able to store an arbitrary amount of text). They are also mutable, whereas string literals are not. Strings are created from string literals as follows:
+```rust
+let mut s = String::from("hello");
+s.push_str(", world");
+// s has "hello, world"
+```
+
+## Memory management
+
+The reason why `String` types are mutable and literals are not has to do with memory. `String` types request memory from the OS during runtime (done with `String::from`), and return the memory when the `String` is finished being used. 
+
+Memory return is usually done with a **garbage collector (GC)**, which keeps track of memory that is no longer being used, and cleans it up automatically, or by allocating and freeing memory manually.
+
+Rust takes a different approach and automatically (and deterministically) frees up memory once the variable goes out of scope by calling a special `drop` function (eg. at `}`).
+
+## Move, copy, and clone
+
+There are two ways to bind a variable to another.
+
+![deep copy](images/deepcopy.png){width=40%}
+\hfill
+![shallow copy](images/shallowcopy.png){width=40%}
+\begin{figure}[!h]
+\begin{subfigure}[t]{0.4\textwidth}
+\caption{Deep copy. The actual data is copied.}
+\end{subfigure}
+\hfill
+\begin{subfigure}[t]{0.4\textwidth}
+\caption{Shallow copy. The metadata and pointer are copied, but the actual data itself is not.}
+\end{subfigure}
+\end{figure}
+
+For data types with a trait called `Copy`, which are usually known-size data that lives only on the stack (eg. ints, bool, floats, char, tuples containing only the previous types), such a binding copies the actual data into the second variable. 
+
+```rust
+let s1 = "hello"; // s1 gets "hello"
+let s2 = s1; // s2 gets "hello",and s1 remains unchanged. 
+```
+
+This is fine because this data lives entirely on the stack, so copies of the actual values are quick to make. Here, shallow copy and deep copy are the same thing. 
+
+
+Data types without a known size at compile time live on the heap. For this data, deep copying may not be a great idea. The first variable can point to a large amount of data, and copying everything may be very expensive. Instead, we can do a shallow copy. The problem with this is that when `s1` and `s2` both go out of scope, they will both try to free the same memory. This is called a **double free error** and is not safe. To fix this, Rust **transfers ownership** of the data to `s2`, and invalidates `s1` immediately. Then, when `s2` goes out of scope, it and it alone will free the memory. 
+
+\begin{figure*}[!h]
+\centering
+\includegraphics[width=0.5\linewidth]{images/move.png}
+\caption{Representation in memory after `s1` is invalidated.}
+\end{figure*}
+
+```rust 
+let s1 = String::from("hello");
+let s2 = s1; // s2 gets `String` type "hello", and s1 is invalidated. 
+```
+
+If we really want to do a deep copy of the heap data, then we can invoke the `clone` method:
+```rust
+let s1 = String::from("hello");
+let s2 = s1.clone(); // s1 remains valid.
+```
+
+## Functions
+
+Passing a value into a function also transfers ownership of the data to the function as if it were a binding. The variable (unless it is `Copy` is invalid outside of that function. When that function completes, the variable goes out of scope. Function returns also transfer ownership in the same way. 
+
+```rust
+fn main() {
+	let s = String::from("hello"); // s comes into scope.
+	f_take(s); // s moves into the scope of f_take
+			   // and is no longer valid in main.
+
+	let x = 5;
+	f_copy(x); // x moves into the scope of f_copy	
+			   // but x is i32, which is Copy.
+			   // so x remains valid here.
+	// do stuff with x.
+
+	let s2 = String::from("hello"); // s2 comes into scope.
+	let s3 = f_take_give_back(s2) // s2 moves into the scope of f_take_give_back
+								  // s2 is no longer valid in main. 
+								  // f_take_give_back returns its value into s3. 
+} // s3 goes out of scope here. s2 is already invalid...
+  // ...x goes out of scope. s is already invalid.
+
+fn f_take(some_str: String) { // some_str comes into scope.
+	// do stuff with some_str.
+} //some_str goes out of scope. 
+
+fn f_copy(some_int: i32) { // some_int comes into scope.
+	// do stuff with some_int
+} // some_int goes out of scope...
+  // ...nothing special happens because it is a copied valued. 
+
+fn f_take_give_back(some_str: String) -> String { // some_str comes into scope
+	some_str // some_str is returned and ownership is transferred out of the function	
+}
+```
 
