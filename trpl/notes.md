@@ -109,14 +109,6 @@ let a_length = a.len();
 let a_first = a[0]
 ```
 
-### Slicing
-Slicing allows a "view" into a data structure without copying. Use `&` to indicate that slices are like references. 
-```rust
-let a = [0, 1, 2, 3, 4];
-let complete = &a[..] // slice with all elements 
-let middle = &a[1..4] // slice with 1, 2, 3
-```
-
 ### Tuples
 Tuples are ordered lists of fixed sizes. They can contain multiple types. Fields of tuples can be **destructured** using `let`:
 ```rust
@@ -395,3 +387,31 @@ fn dangle() -> &String {
 	&s // return reference to s
 } // s goes out of scope. but the reference (to this invalid String) has been stored.
 ```
+
+# Additional data types
+
+## Slice
+
+Slicing allows a "view" into a collection of elements without ownership. Use `&` to indicate that slices are like references. We can also make references to a portion of the collection. 
+
+```rust
+let a = [0, 1, 2, 3, 4];
+let complete = &a[..] // slice with all elements 
+let middle = &a[1..4] // slice with 1, 2, 3
+
+let s = String::from("hello");
+let first_two = &a[..2] // slice with "he"
+let last_two = &a[3..] // slice with "lo"
+```
+
+A string slice is denoted `&str`. String literals are actually string slices. This is why they are immutable: they are immutable references. 
+
+When writing a function to take in a string, it is better to use `&str` as the parameter instead of `&String`. Using `&str` means that if we have a `String`, we can pass a slice of the entire string, but if we only have a slice, then we can just pass the slice. It allows for more general use without any loss of functionality. 
+```rust 
+fn some_fn(s: &str) -> &str { // this is better.
+...
+fn some_fn(s: &String) -> &str { // dont do this.
+```
+
+## Structs
+
