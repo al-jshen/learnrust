@@ -331,3 +331,67 @@ fn f_take_give_back(some_str: String) -> String { // some_str comes into scope
 }
 ```
 
+## References and Borrowing
+
+In order to get the value of a variable without taking ownership, use `&`. This passes a **reference** of the object instead of the object itself. This is called **borrowing**. 
+
+```rust
+fn main() {
+	let s1 = String::from("hello");
+	let len1 = calculate_len1(&s1); // pass a reference of s1.
+	// s1 is still valid here. 
+	let len2 = calculate_len2(s1); // pass s1 itself.
+	// ownership of s1 has been transferred to calculate_len2
+	// s1 is no longer valid here. 
+}
+
+fn calculate_len1(s: &String) -> usize {
+	s.len()
+} // function does not have ownership of s. 
+  // s goes out of scope but nothing special happens. 
+
+fn calculate_len2(s: String) -> usize { // s comes into scope.
+	s.len()
+} // function has ownership of s, and it goes out of scope here. 
+  // drop gets called, and the memory of s is cleared. 
+```
+
+### Mutable references
+
+References are by default immutable. This is to prevent **data races**, which happen when:
+- two or more pointers access the same data at the same time,
+- at least one of the pointers is being used to write to the data, and
+- there is no synchronized access to the data.
+
+Mutable references are allowed under some restrictions using `&mut`:
+- There can only be one mutable reference to a particular piece of data within a particular scope. 
+	- It is possible to create a new scope with `{}` and use multiple mutable references in different scopes. 
+- It is not possible to combine mutable and immutable references in the same scope. 
+
+The scope of a reference starts from where it is introduced, and ends after the last time it is used. The following codde is permitted, because the scopes of the immutable reference `s1` ends before the mutable reference `s2` is introduced:
+
+```rust
+let mut s = String::from("hello");
+
+let s1 = &s;
+println!("{}", s1);
+// s1 no longer being used.
+
+let s2 = &mut s; // this is fine.
+```
+
+### Dangling references
+
+A **dangling pointer** is a pointer that references a location in memory that might have been given to someone else (ie. memory was freed while the pointer was preserved). Rust will automatically prevent this from compiling. 
+
+```rust
+fn main() {
+	let dead_reference = dangle();
+}
+
+fn dangle() -> &String {
+	let s = String::from("hello"); // s comes into scope.
+
+	&s // return reference to s
+} // s goes out of scope. but the reference (to this invalid String) has been stored.
+```
