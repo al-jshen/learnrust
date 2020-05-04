@@ -415,3 +415,87 @@ fn some_fn(s: &String) -> &str { // dont do this.
 
 ## Structs
 
+### Classic C structs
+
+Structs are labelled and grouped collections of data (called **fields**). After defining a struct, we create an instance of it and specify concrete values for each of the fields. We can use dot notation to get the value of a particular field, or to change it. In order to change a field, the entire struct instance must be marked with `mut`. 
+
+```rust 
+struct User {
+	username: String,
+	n_logins: u32,
+	active: bool,
+};
+
+let mut user1 = User {
+	username: String::from("test"),
+	n_logins: 16,
+	active: true,
+};
+
+user1.active = false;
+
+```
+
+To create a new instance of a struct quickly using most of another instance's values, you can use the **struct update syntax**:
+
+```rust
+let user2 = User {
+	username: String::from("other"),
+	n_logins: 16, // unchanged
+	active: false, // unchanged
+}
+... // equivalent to the following:
+let user2 = User {
+	username: String::from("other"),
+	..user1 // struct update
+}
+
+```
+
+### Tuple structs 
+
+Tuple structs are like named tuples, or C structs without field labels:
+
+```rust
+struct Point(i32, i32); // define struct.
+let origin = Point(0, 0); // create instance. 
+let (x, y) = origin; // destructure.
+```
+
+### Methods
+
+To give a struct a method that it can call, use `impl`. The first parameter of a method is always `self`, which is the instance of the struct that the method is being called on. Multiple methods can be defined in an `impl` block. 
+
+```rust
+struct Rectangle {
+	width: u32,
+	height: u32,
+}
+
+impl Rectangle {
+	fn area(&self) -> u32) {
+		self.width * self.height
+	}
+
+	fn can_hold(&self, other: &Rectangle) -> bool {
+		self.width >= other.width && self.height >= other.height
+	}
+}
+```
+
+### Associated Functions
+
+Associated functions are functions (not methods) defined within `impl` which do not take `self` as a parameter. `String::from` is an example of an associated function. These are often used for returning a new instance of the struct. 
+
+```let```
+impl Rectangle {
+	fn square(size: u32) -> Rectangle {
+		Rectangle {
+			width: size,
+			height: size,
+		}
+	}
+}
+
+let sq5 = Rectangle::square(5);
+```
