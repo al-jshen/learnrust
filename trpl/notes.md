@@ -624,4 +624,77 @@ impl<T> Point<T> {
 }
 ```
 
+## Traits
+
+Different types share the same behaviour if we can call the same methods on all those types: traits are used to group a set of behaviours that perform the same task. Think about traits as abstract methods that are then defined more specifically by types that have that trait. It is also possible to define some default behaviour for a trait. 
+
+```rust 
+pub trait Summary {
+	fn summarize_author(&self) -> String; // trait method.
+
+	fn summarize(&self) -> String { // default behaviour. no need to redefine. 
+		println!("Written by {}...", self.summarize_author())
+	}
+}
+
+impl Summary for Tweet { // give type `Tweet` the trait `Summary`
+	fn summarize_author(&self) -> String { // implement summarize_author, which...
+		println!("@{}", self.username)     // ... has no default behaviour
+	}
+}
+
+impl Summary for Article {
+	fn summarize_author(&self) -> String { // different implementation
+		println!("{} {}", self.first, self.last)
+	}
+}
+```
+
+We can write functions that accept only parameters which have a some trait, and return types that have a trait. However, only one type can be returned (ie. cannot return two different types which both implement the same trait):
+
+```rust 
+fn notify(item: impl Summary) -> impl Summary { // accepts any type with trait Summary
+												// returns type with trait Summary
+```
+
+which is really just syntactic sugar for a **trait bound**:
+
+```rust
+fn notify<T: Summary>(item: T) {
+```
+
+We can use trait bounds to take two parameters that both implement Summary, but to force them to be the same type:
+
+```rust
+fn notify(item1: impl Summary, item2: impl Summary) { // can be any two Types...
+													  // ... with impl Summary
+...
+fn notify<T: Summary>(item1: T, item2: T) { // both have to be the same type...
+											// ... which has impl Summary
+```
+
+We can specify multiple bounds:
+
+```rust
+fn notify(item: impl Summary + Display) { // must have both Summary and Display
+```
+
+`where` is used to write cleaner trait bounds:
+
+```rust
+fn notify<T, U>(item1: T, item2: U)
+	where T: Display + Clone, // input with type T must have both Display and Clone
+		  U: Clone + Debug 
+	{
+		// ...
+	}
+```
+
+**Blanket implementations** are implementations of a trait on a type that satisfies some trait bound:
+
+```rust 
+impl<T: Display> ToString for T { // impl ToString on some type T with trait Display
+```
+
+## Lifetimes
 
