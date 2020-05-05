@@ -388,8 +388,6 @@ fn dangle() -> &String {
 } // s goes out of scope. but the reference (to this invalid String) has been stored.
 ```
 
-# Additional data types
-
 ## Slice
 
 Slicing allows a "view" into a collection of elements without ownership. Use `&` to indicate that slices are like references. We can also make references to a portion of the collection. 
@@ -413,9 +411,9 @@ fn some_fn(s: &str) -> &str { // this is better.
 fn some_fn(s: &String) -> &str { // dont do this.
 ```
 
-## Structs
+# Structs
 
-### Classic C structs
+## Classic C structs
 
 Structs are labelled and grouped collections of data (called **fields**). After defining a struct, we create an instance of it and specify concrete values for each of the fields. We can use dot notation to get the value of a particular field, or to change it. In order to change a field, the entire struct instance must be marked with `mut`. 
 
@@ -452,7 +450,7 @@ let user2 = User {
 
 ```
 
-### Tuple structs 
+## Tuple structs 
 
 Tuple structs are like named tuples, or C structs without field labels:
 
@@ -462,7 +460,7 @@ let origin = Point(0, 0); // create instance.
 let (x, y) = origin; // destructure.
 ```
 
-### Methods
+## Methods
 
 To give a struct a method that it can call, use `impl`. The first parameter of a method is always `self`, which is the instance of the struct that the method is being called on. Multiple methods can be defined in an `impl` block. 
 
@@ -483,7 +481,7 @@ impl Rectangle {
 }
 ```
 
-### Associated Functions
+## Associated Functions
 
 Associated functions are functions (not methods) defined within `impl` which do not take `self` as a parameter. `String::from` is an example of an associated function. These are often used for returning a new instance of the struct. 
 
@@ -500,7 +498,7 @@ impl Rectangle {
 let sq5 = Rectangle::square(5);
 ```
 
-## Enums
+# Enums
 
 Enums are used to define different possible variants of some type of data. A instance can only be one variant. Functions that are set up to take in an `enum` can take any variant. Each variant can have some data associated with it, and the types can differ. `impl` can also be used with `enum`. 
 
@@ -522,7 +520,7 @@ let m = Message::ChangeColor(5, 23, 52);
 m.call();
 ```
 
-### Option
+## Option
 
 `Option` is a special `enum` that encodes the concept of a value being present or absent (like a null value, which Rust doesn't have (for safety purposes)). The `<T>` is a generic type which indicates that it can take any type. 
 
@@ -537,7 +535,7 @@ Note that a variable of type `Option<T>` and one of type `T` are not the same. T
 
 DO GENERICS FIRST. THEN REWRITE THIS. 
 
-### match
+## match
 
 `match` is used to compare a value against a series of patterns and conditionally execute code based on the match. Unlike `if`, the expression doesn't need to return a boolean. Each condition in the `match` is called an **arm**, which is comprised of a pattern and some code, separated by `=>`. It is possible to get the value inside the variant, and then perform some action on that value. Matches are exhaustive: all cases must be explicitly covered. In many cases, the equivalent of an `else` statement is the pattern `_`, which matches any value. 
 
@@ -575,18 +573,18 @@ fn get_small_vals(c: coin) -> u8 {
 ```
 
 
-## Generics 
+# Generics 
 
 Generics can be used to write code that applies to many different types without knowing beforehand what the type will be. Generics are usually denoted by `<T>`. There is no performance cost to using generics because Rust applies **monomorphization** and turns the generic code into a concrete type during compilation. 
 
-### Functions
+## Functions
 
 ```rust 
 fn largest<T>(list: &[T]) -> {
 ```
 means that the function `largest` is generic over some type `T`. It has one parameter named `list`, which is a slice of values of type `T`. It returns a value of the same type `T`. Because this function is defined generically, it could be applied to slice of `ints` or a slice of `chars` in the same way. 
 
-### Structs
+## Structs
 
 ```rust
 struct Point<T> {
@@ -610,7 +608,7 @@ let int_and_float = Point{x: 5, y: 10.5};
 let both_floats = Point{x: 1.2, y: 5.0};
 ```
 
-### Methods
+## Methods
 
 In order to declare that a method takes a generic, we use `impl<T>`:
 
@@ -625,4 +623,5 @@ impl<T> Point<T> {
 	}
 }
 ```
+
 
