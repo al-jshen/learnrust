@@ -323,7 +323,7 @@ fn f_take_give_back(some_str: String) -> String { // some_str comes into scope
 }
 ```
 
-## References and Borrowing
+# References and Borrowing
 
 In order to get the value of a variable without taking ownership, use `&`. This passes a **reference** of the object instead of the object itself. This is called **borrowing**. 
 
@@ -348,7 +348,7 @@ fn calculate_len2(s: String) -> usize { // s comes into scope.
   // drop gets called, and the memory of s is cleared. 
 ```
 
-### Mutable references
+## Mutable references
 
 References are by default immutable. This is to prevent **data races**, which happen when:
 - two or more pointers access the same data at the same time,
@@ -372,7 +372,7 @@ println!("{}", s1);
 let s2 = &mut s; // this is fine.
 ```
 
-### Dangling references
+## Dangling references
 
 A **dangling pointer** is a pointer that references a location in memory that might have been given to someone else (ie. memory was freed while the pointer was preserved). Rust will automatically prevent this from compiling. 
 
@@ -573,3 +573,56 @@ fn get_small_vals(c: coin) -> u8 {
 	}
 }
 ```
+
+
+## Generics 
+
+Generics can be used to write code that applies to many different types without knowing beforehand what the type will be. Generics are usually denoted by `<T>`. There is no performance cost to using generics because Rust applies **monomorphization** and turns the generic code into a concrete type during compilation. 
+
+### Functions
+
+```rust 
+fn largest<T>(list: &[T]) -> {
+```
+means that the function `largest` is generic over some type `T`. It has one parameter named `list`, which is a slice of values of type `T`. It returns a value of the same type `T`. Because this function is defined generically, it could be applied to slice of `ints` or a slice of `chars` in the same way. 
+
+### Structs
+
+```rust
+struct Point<T> {
+	x: T,
+	y: T,
+}
+
+let integer = Point{x: 5, y: 10};
+let float = Point{x: 1.2, y: 5.0};
+```
+
+Note that although generics can work with different types, for a given instantiation, the `T` is fixed. That is, we cannot define `Point` with `x` and `y` as different types, unless we define it as follows:
+
+```rust
+struct Point<T, U> {
+	x: T,
+	y: U,
+}
+
+let int_and_float = Point{x: 5, y: 10.5};
+let both_floats = Point{x: 1.2, y: 5.0};
+```
+
+### Methods
+
+In order to declare that a method takes a generic, we use `impl<T>`:
+
+```rust
+struct Point<T> {
+	x: T,
+	y: T,
+}
+impl<T> Point<T> {
+	fn x(&self) -> &T {
+		&self.x
+	}
+}
+```
+
