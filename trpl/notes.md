@@ -487,7 +487,7 @@ impl Rectangle {
 
 Associated functions are functions (not methods) defined within `impl` which do not take `self` as a parameter. `String::from` is an example of an associated function. These are often used for returning a new instance of the struct. 
 
-```let```
+```rust
 impl Rectangle {
 	fn square(size: u32) -> Rectangle {
 		Rectangle {
@@ -498,4 +498,78 @@ impl Rectangle {
 }
 
 let sq5 = Rectangle::square(5);
+```
+
+## Enums
+
+Enums are used to define different possible variants of some type of data. A instance can only be one variant. Functions that are set up to take in an `enum` can take any variant. Each variant can have some data associated with it, and the types can differ. `impl` can also be used with `enum`. 
+
+```rust
+enum Message {
+	Quit,
+	Move {x: i32, y: i32},
+	Write(String),
+	ChangeColor(i32, i32, i32),
+}
+
+impl Message {
+	fn call(&self) {
+		// method here. 
+	}
+}
+
+let m = Message::ChangeColor(5, 23, 52);
+m.call();
+```
+
+### Option
+
+`Option` is a special `enum` that encodes the concept of a value being present or absent (like a null value, which Rust doesn't have (for safety purposes)). The `<T>` is a generic type which indicates that it can take any type. 
+
+```rust
+enum Option<T> {
+	Some(T),
+	None,
+}
+```
+
+Note that a variable of type `Option<T>` and one of type `T` are not the same. They cannot interact like two `T` variables can. 
+
+DO GENERICS FIRST. THEN REWRITE THIS. 
+
+### match
+
+`match` is used to compare a value against a series of patterns and conditionally execute code based on the match. Unlike `if`, the expression doesn't need to return a boolean. Each condition in the `match` is called an **arm**, which is comprised of a pattern and some code, separated by `=>`. It is possible to get the value inside the variant, and then perform some action on that value. Matches are exhaustive: all cases must be explicitly covered. In many cases, the equivalent of an `else` statement is the pattern `_`, which matches any value. 
+
+```rust
+enum issue_year {
+	2000, 
+	2001,
+	2002,
+	...
+}
+enum coin {
+	penny,
+	nickel,
+	dime(issue_year),
+	quarter,
+	loonie,
+	toonie,
+}
+
+fn get_small_vals(c: coin) -> u8 {
+	match c {
+		coin::penny => 1,
+		coin::nickel => 5,
+		coin::dime(issue_year) => {
+			println!("This dime was issued in {}", issue_year);
+			10
+		},
+		coin::quarter => 25,
+		_ => {
+			println!("value too large");
+			0
+		},
+	}
+}
 ```
