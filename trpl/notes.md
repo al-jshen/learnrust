@@ -698,3 +698,24 @@ impl<T: Display> ToString for T { // impl ToString on some type T with trait Dis
 
 ## Lifetimes
 
+Every reference has a **lifetime**, which is the scope for which that reference is valid. This is done to prevent dangling references. Most of the times lifetimes are determined by Rust's compiler (via **lifetime elision rules**). Sometimes we need to explicitly annotate lifetimes in order to ensure that the underlying value being referenced lives at least as long as the reference itself(? opposite?) (it doesn't get dropped before the reference does, which would leave the reference dangling). Lifetime parameters can be generic (denoted by `<>`), so that functions can accept references with any lifetime. Lifetimes are given by `'`, and conventionally go by alphabetical order (ie. `'a`, `'b`, etc.). Lifetimes are really just to make life easier for the compiler. They don't modify the actual lifetimes. 
+
+The following function signature says that for some lifetime `'a`, the function takes two parameters and returns one parameter, all of which will live at least as long as `'a`. 
+
+```rust
+fn longest<'a'>(x: &'a str, y: &'a str) -> &'a str {
+```
+
+
+```rust
+struct Excerpt<'a> {
+	part: &'a str,
+}
+```
+
+### Static 
+
+A special lifetime is the `'static` lifetime, which means that the reference can live for the entire duration of the program. All string literals have `'static` lifetime, and can be annotated explicitly using `&'static str`. 
+
+
+
