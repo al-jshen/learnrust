@@ -843,4 +843,55 @@ pub mod hosting {
 	pub fn add() {}
 }
 ```
+
+# Common collections
+
+## Vectors
+
+A vector has type `Vec<T>`. Vectors are used to store multiple values of the same type in contiguous memory. To create a new vector, use `Vec::new()`. However, because vectors are used commonly, there is a macro to create a vector, `vec!`. Vectors are expandable whereas arrays are not. To add an element to it, we use `push`, and to remove and return the last element, we use `pop`. Accessing elements in a vector can be done with either `[]`, which gives a reference, or `get`, which gives an `Option<T>`. It is possible to iterate over a vector like an array.
+
+```rust 
+let v1: Vec<T> = Vec::new([1, 2, 3]);
+let mut v2 = vec![1, 2, 3];
+
+v2.push(4); // v2 is now [1,2,3,4]
+v2.pop() // no ;, returns 4
+
+println!("{}", &v2[2]); // 3
+println!("{}", &v2.get(2)); // 3
+
+let does_not_exist = &v2[73]; // crashes
+let does_not_exist = &v2.get(73); // None
+
+for i in &v {
+	println!("{}", i);
+}
+
+for i in &v {
+	*i += 5; // dereference i with * in order to modify
+}
+
 ```
+
+### Combining with enums
+
+Although vectors can only store values that are of one type, we can use different variants of an enum, which are all defined under the same enum type.
+
+```rust
+enum Cell {
+	Int(i32),
+	Float(f32),
+	Text(String),
+}
+
+let v = vec![
+	Cell::Int(3),
+	Cell::Float(23.5),
+	Cell::Text(String::from("hello")),
+];
+```
+
+## Strings
+
+## Hash Maps
+
