@@ -411,6 +411,27 @@ fn some_fn(s: &str) -> &str { // this is better.
 fn some_fn(s: &String) -> &str { // dont do this.
 ```
 
+# Lifetimes
+
+Every reference has a **lifetime**, which is the scope for which that reference is valid. This is done to prevent dangling references. Most of the times lifetimes are determined by Rust's compiler (via **lifetime elision rules**). Sometimes we need to explicitly annotate lifetimes in order to ensure that the underlying value being referenced lives at least as long as the reference itself(? opposite?) (it doesn't get dropped before the reference does, which would leave the reference dangling). Lifetime parameters can be generic (denoted by `<>`), so that functions can accept references with any lifetime. Lifetimes are given by `'`, and conventionally go by alphabetical order (ie. `'a`, `'b`, etc.). Lifetimes are really just to make life easier for the compiler. They don't modify the actual lifetimes. 
+
+The following function signature says that for some lifetime `'a`, the function takes two parameters and returns one parameter, all of which will live at least as long as `'a`. 
+
+```rust
+fn longest<'a'>(x: &'a str, y: &'a str) -> &'a str {
+```
+
+
+```rust
+struct Excerpt<'a> {
+	part: &'a str,
+}
+```
+
+## Static 
+
+A special lifetime is the `'static` lifetime, which means that the reference can live for the entire duration of the program. All string literals have `'static` lifetime, and can be annotated explicitly using `&'static str`. 
+
 # Structs
 
 ## Classic C structs
@@ -624,7 +645,7 @@ impl<T> Point<T> {
 }
 ```
 
-## Traits
+# Traits
 
 Different types share the same behaviour if we can call the same methods on all those types: traits are used to group a set of behaviours that perform the same task. Think about traits as abstract methods that are then defined more specifically by types that have that trait. It is also possible to define some default behaviour for a trait. 
 
@@ -696,26 +717,130 @@ fn notify<T, U>(item1: T, item2: U)
 impl<T: Display> ToString for T { // impl ToString on some type T with trait Display
 ```
 
-## Lifetimes
+# Managing Projects
 
-Every reference has a **lifetime**, which is the scope for which that reference is valid. This is done to prevent dangling references. Most of the times lifetimes are determined by Rust's compiler (via **lifetime elision rules**). Sometimes we need to explicitly annotate lifetimes in order to ensure that the underlying value being referenced lives at least as long as the reference itself(? opposite?) (it doesn't get dropped before the reference does, which would leave the reference dangling). Lifetime parameters can be generic (denoted by `<>`), so that functions can accept references with any lifetime. Lifetimes are given by `'`, and conventionally go by alphabetical order (ie. `'a`, `'b`, etc.). Lifetimes are really just to make life easier for the compiler. They don't modify the actual lifetimes. 
+## Crates
 
-The following function signature says that for some lifetime `'a`, the function takes two parameters and returns one parameter, all of which will live at least as long as `'a`. 
+A **crate** is a binary or library. A **package** is one or more crates that provide a set of functionality, and it contains a **Cargo.toml** file that describes how to build those crates. A package can contain any number of binary crates, and zero or one library crates.
+
+If a package contains `src/main.rs`, it has a binary crate. If it contains `src/lib.rs`, it has a library crate. It can have both. A package with multiple binary crates has its files in `src/bin/`.
+
+To bring in functionality from a crate, we use `crateName::thing`.
+
+## Modules
+
+Modules are used to organize code within a crate into a module tree, and to control whether code is public (usable by outside code) or private. Modules are defined with `mod`. 
+
+![module tree code](images/modtreecode.png){width=40%}
+\hfill
+![shallow copy](images/modtree.png){width=40%}
+\begin{figure}[!h]
+\caption{Code implementation of module organization, and the corresponding module tree representation.}
+\end{figure}
+
+Modules are referenced using either absolute or relative paths, with each "level" separated by `::`. Absolute paths start with `crate` at the crate root, and relative paths start with the current module.
+
+### pub
+
+In order for other code to be able to access modules, they must be public: mark modules as public with `pub`. Functions can access other modules that are defined in the same module/crate, even if they are not public. We can also go up module levels using `super`, which is like `..`. 
 
 ```rust
-fn longest<'a'>(x: &'a str, y: &'a str) -> &'a str {
-```
+mod lev1 { // not public, but accessible by testing because...
+		   // ...lev1 and testing are defined in the same module
+	pub mod lev2 { // make this public so it is accessible. 
+		pub fn add() {}
+		
+		pub fn subtract() {
+			super::something(); // super refers to lev1 here
+		}
+	}
 
+	pub fn something() {}
+}
 
-```rust
-struct Excerpt<'a> {
-	part: &'a str,
+pub fn testing() {
+	// absolute path
+	crate::lev1::lev2::add();
+
+	// relative path
+	lev1::lev2::add();
 }
 ```
 
-### Static 
+Structs can be marked a public as well, but each field must also be marked individually. On the other hand, when an enum is marked as public, all the variants are also public. 
 
-A special lifetime is the `'static` lifetime, which means that the reference can live for the entire duration of the program. All string literals have `'static` lifetime, and can be annotated explicitly using `&'static str`. 
+```rust
+pub struct Breakfast {
+	pub toast: String, // public
+	fruit: String,	   // private
+}
 
+pub enum Appetizer { // all variants public
+	Soup,
+	Salad,
+}
+```
 
+### use
 
+To bring a path into the current scope, we can use `use` (like imports). That way, we can avoid typing out the full path every time. It is conventional to bring in the parent of a certain function rather than going all the way down to the function itself. Then, when the function is called, the parent is specified, which indicates that the function was not defined locally. However, with things other than functions (eg. structs, enums), do specify all the way down. When we use `use`, we can rename things using `as`. By default, `use` brings in modules which are private. We can do `pub use` to make it like that name was defined in the current scope. This is called **re-exporting**. 
+
+```rust
+mod front {
+	pub mod hosting {
+		pub fn add() {}
+	}
+}
+
+pub use crate::front::hosting as host; 
+
+pub fn testing() {
+	host::add(); 
+}
+```
+
+We can bring in multiple items from a module using `{}`, `self`, and `*`:
+
+```rust 
+use std::io;
+use std::io::Write;
+use std::cmp::Ordering;
+
+// can be rewritten as 
+use std::{self, Write, cmp::Ordering};
+
+// to bring in everything from std::io:
+use std::io::*;
+```
+
+## External files
+
+When we want to use external packages, we can edit `Cargo.toml`. For example to use a package called `rand`, we would write:
+
+```rust 
+[dependencies]
+rand = "0.1.0" 
+```
+
+## Multiple files 
+
+We can separate modules into their own files. For example, we can move a module `front` into `src/front.rs`, and call it from the crate root:
+
+```rust
+mod front;
+
+pub use crate::front::hosting; 
+
+pub fn testing() {
+	hosting::add();
+}
+```
+
+In `src/front.rs`, we should be sure to mark the module as public:
+
+```rust 
+pub mod hosting {
+	pub fn add() {}
+}
+```
+```
