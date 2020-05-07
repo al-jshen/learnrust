@@ -1060,4 +1060,37 @@ Use `panic!` when
 - calling external code that is out of your control 
 - failure is not expected
 
-# Testing
+# Automated Testing 
+
+Tests are used to make sure code is functioning as expected. `cargo test` is used to compile your code in test mode and then run the test binary. We annotate functions with `#[test]` above the function definition in order to indicate that they are test functions. The macros `assert_eq!` and `assert_ne!` are used to check for equality and inequality respectively, and the macro `assert!` is used to check that some condition evaluates to `true`. 
+
+```rust
+#[test]
+fn it_works() {
+	assert_eq!(2+2, 4);
+}
+```
+
+The attribute `should_panic` is used to indicate that a function is expected to panic:
+
+```rust
+#[test] 
+#[should_panic]
+fn here() {}
+```
+
+## Unit tests
+
+Unit tests are used to test each unit of code in isolation from the rest of the code. The convention is to create a `tests` module in each file, annotated with `#[cfg(test)]`, which tells Rust to compile and run the test code only when you run `cargo test`, and not `cargo build`. 
+
+```rust 
+#[cfg(test)]
+mod tests {
+	#[test]
+	fn test1() {}
+
+	#[test]
+	fn test2() {}
+}
+```
+
