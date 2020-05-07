@@ -844,7 +844,7 @@ pub mod hosting {
 }
 ```
 
-# Common collections
+# Common Collections
 
 ## Vectors
 
@@ -892,6 +892,24 @@ let v = vec![
 ```
 
 ## Strings
+
+The `String` type is growable, mutable, owned, UTF-8 encoded string type. The `str` type, which is usually seen in the form `&str`, is a string slice, or a reference to some UTF-8 encoded string data stored elsewhere. 
+
+Strings are usually created from string literals using `String::from` or `.to_string`. They can be grown using `push_str`, which takes a string slice. 
+
+```rust
+let mut s1 = "foo".to_string();
+let s2 = "bar";
+s1.push_str(s2); // s1 is "foobar", s2 is "bar"
+```
+
+Two strings can be combined using `+`, but it is usually better to use `format!`, which is cleaner and doesn't take ownership of any of the parameters. It returns a `String` type. Rust doesn't allow for indexing into `String` types because of some complicated stuff (Unicode scalar values, bytes, grapheme clusters, ...). 
+
+```rust
+let s1 = String::from("hello");
+let s2 = String::from("world");
+let s3 = format!("{} {}", s1, s2);
+```
 
 ## Hash Maps
 
@@ -945,3 +963,101 @@ for word in text.split_whitespace() {
 	*count += 1;
 }
 ```
+
+# Error Handling
+
+For unrecoverable errors, use `panic!`. The program prints an error message, unwinds (walks back up the stack and cleans up all the data), and then quits. 
+
+For errors that are not so serious as to require `panic!`, we can sometimes interpret them and respond accordingly. Some functions which can potentially fail return a `Result<T, E>` enum:
+
+```rust 
+enum Result<T, E> {
+	Ok(T),
+	Err(E),
+}
+```
+
+We can then take the `Result` object and execute code conditionally using `match`. We can also nest `match` statements: if we get an error, we can execute different code depending on the error type. For example, if the file doesn't exist, we can just create it. 
+
+```rust 
+use std::fs::File
+
+let f = File::open("hello.txt");
+let f = match f {
+	Ok(file) => file,
+	Err(error) => match error.kind() {
+		ErrorKind::NotFound => match File::create("hello.txt") {
+			Ok(fc) => fc,
+			Err(e) => panic!("Problem creating file: {:?}", e),
+		},
+		other_error => {
+			panic!("Problem opening file: {:?}", error),
+		}
+	} 
+}
+```
+
+## unwrap and expect
+
+`match` can get messy. `unwrap` is shorthand for implementing the `match` statement similar to above. If the `Result` is the `Ok` variant, then it returns the value inside the `Ok`, and if it is the `Err` variant, then `unwrap` calls `panic!`. `expect` is similar, but it allows us to include an error message in the `panic!` call. 
+
+```rust
+let f = File::open("hello.txt").unwrap(); // will panic! if there is an error
+// ...
+let f = File::open("hello.txt").expect("Failed to open hello.txt"); // panics with message
+```
+
+## Error propagation
+
+Sometimes it is useful to return a function error to the code that calls the function in the first place, and let it decide what to do. This is called **error propagation**. We can do this with `match`, or with the shorthand operator `?`, which, if there is an error, returns `Err`, and if there is an `Ok`, returns the value inside the `Ok`. 
+
+```rust
+use std::fs::File;
+use std::io;
+use std::io::Read;
+
+fn read_username_from_file() -> Result<String, io::Error> {
+    let f = File::open("hello.txt");
+
+    let mut f = match f {
+        Ok(file) => file,
+        Err(e) => return Err(e),
+    };
+
+    let mut s = String::new();
+
+    match f.read_to_string(&mut s) {
+        Ok(_) => Ok(s),
+        Err(e) => Err(e),
+    }
+}
+```
+
+which is equivalent to:
+
+
+```rust
+use std::fs::File;
+use std::io;
+use std::io::Read;
+
+fn read_username_from_file() -> Result<String, io::Error> {
+    let mut f = File::open("hello.txt")?;
+    let mut s = String::new();
+    f.read_to_string(&mut s)?;
+    Ok(s)
+}
+```
+
+## When to panic
+
+Use `panic!` when 
+
+- error handling is required, but manual inspection shows that it isn't possible for the code to fail. 
+- some assumption, guarantee, or contract has been broken (eg. invalid, contradictory, or missing values are passed to your code) and 
+	* this is not expected to happen frequently
+	* the code after this point relies on the assumption to hold
+- calling external code that is out of your control 
+- failure is not expected
+
+# Testing
