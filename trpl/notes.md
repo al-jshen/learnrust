@@ -893,6 +893,24 @@ let v = vec![
 
 ## Strings
 
+The `String` type is growable, mutable, owned, UTF-8 encoded string type. The `str` type, which is usually seen in the form `&str`, is a string slice, or a reference to some UTF-8 encoded string data stored elsewhere. 
+
+Strings are usually created from string literals using `String::from` or `.to_string`. They can be grown using `push_str`, which takes a string slice. 
+
+```rust
+let mut s1 = "foo".to_string();
+let s2 = "bar";
+s1.push_str(s2); // s1 is "foobar", s2 is "bar"
+```
+
+Two strings can be combined using `+`, but it is usually better to use `format!`, which is cleaner and doesn't take ownership of any of the parameters. It returns a `String` type. Rust doesn't allow for indexing into `String` types because of some complicated stuff (Unicode scalar values, bytes, grapheme clusters, ...). 
+
+```rust
+let s1 = String::from("hello");
+let s2 = String::from("world");
+let s3 = format!("{} {}", s1, s2);
+```
+
 ## Hash Maps
 
 Hashmaps `HashMap<K, V>` are used to store mappings from keys of type `K` to values of type `V`. Keys and values can be of any time, but within one instance of a hashmap, all keys must be the same type, and all values must be the same type. For `Copy` types, the hashmap copies the values, and for owned types like `String`, the hashmap takes ownership of the values. We can loop over the values in a hashmap, but this happens in an arbitrary order.
