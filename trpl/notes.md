@@ -895,3 +895,53 @@ let v = vec![
 
 ## Hash Maps
 
+Hashmaps `HashMap<K, V>` are used to store mappings from keys of type `K` to values of type `V`. Keys and values can be of any time, but within one instance of a hashmap, all keys must be the same type, and all values must be the same type. For `Copy` types, the hashmap copies the values, and for owned types like `String`, the hashmap takes ownership of the values. We can loop over the values in a hashmap, but this happens in an arbitrary order.
+
+```rust
+use std::collections::HashMap;
+
+let mut scores = HashMap::new();
+
+scores.insert(String::from("blue"), 10);
+scores.insert(String::from("red"), 50);
+
+let team_name = String::from("blue");
+let score = scores.get(&team_name); // returns Some(&10)
+
+for (key, value) in &scores {
+	println!("{} {}", key, value);
+}
+
+scores.insert(String::from("blue"), 25); // overwrite value
+```
+
+### `entry`
+
+We can use `entry` to check whether a key has a value associated with it. The return value is an enum called `Entry`, which has a method called `or_insert` which returns a mutable reference to the value for the corresponding key if that key exists, and if not, inserts the given parameter as the new value for the key. 
+
+```rust
+use std::collections::HashMap;
+
+let mut scores = HashMap::new();
+scores.insert(String::from("Blue"), 10);
+
+scores.entry(String::from("Yellow")).or_insert(50);
+scores.entry(String::from("Blue")).or_insert(50);
+
+let blue_score = scores.get(String::from("Blue")); // 10
+let yellow_score = scores.get(String::from("Yellow")); // 50
+```
+
+We can use these same functions to update values in a hashmap, using the fact that a mutable reference is returned by `or_insert` if a key already has a stored value. 
+
+
+```rust
+let text = "hello world wonderful world";
+
+let mut map = HashMap::new();
+
+for word in text.split_whitespace() {
+	let count = map.entry(word).or_insert(0); 
+	*count += 1;
+}
+```
