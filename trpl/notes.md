@@ -844,6 +844,21 @@ pub mod hosting {
 }
 ```
 
+## Release profiles 
+
+Release profiles are used to generate different configurations for compilation, each of which is independent of the others. The two main profiles are `dev` and `release` (used when you run `cargo build --release`). Profile settings can be configured in the `Cargo.toml` file. 
+
+Optimizations are done with the `opt-level` setting, which ranges from 0-3. Higher settings apply more optimizations, but take longer to compile.
+
+```rust
+//in Cargo.toml
+[profile.dev]
+opt-level = 0
+
+[profile.release]
+opt-level = 3
+```
+
 # Common Collections
 
 ## Vectors
