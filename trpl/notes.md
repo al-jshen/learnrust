@@ -1094,3 +1094,43 @@ mod tests {
 }
 ```
 
+# Functional Features
+
+## Closures
+
+**Closures** are lambda (anonymous) functions, defined with some parameters in `||`. Since they are usually short and applied only to specific situations rather than general ones, the compiler is usually able to infer the parameter types, and so type annotations are unnecessary. 
+
+```rust
+
+let f = |x| x+2; 
+let g = |x| {
+	x+2
+};
+
+println!("{}", f(2));
+```
+
+## Iterators
+
+Iterators are used to perform some task on a sequence of items in turn. To turn some item into an iterator, use `.iter()`. Iterators are faster than loops and are highly optimized. 
+
+### Consuming adaptors
+ 
+The `.next()` method can be invoked to get the next item in the iterator. Note that this consumes the item. Thus, methods that make use of `next` are called **consuming adaptors**, because they use up the iterator. Iterators are lazy, which means they have no effect until some method consumes them. A common consuming adaptor method is the `collect` method, which consumes the iterator and collects the resulting values into a collection data type. 
+ 
+### Iterator adaptors
+
+Another type of methods is called **iterator adaptors**, which turn iterators into other kinds of iterators. These can be chained together to perform complex actions. However, at the end, a consuming adaptor method must be called in order to get the results from the calls to all the iterator adaptors. Examples of iterator adaptors are:
+ - `map`, which applies some function to each element in the iterator
+ - `filter`, which includes the item if some given closure evalutes to true
+ - `zip`, which iterators two other iterators simultaneously
+ - `fold` (also called reduce), which uses an accumulation function to produce a single, final value
+
+ ```rust
+let v1: Vec<i32> = vec![1, 2, 3, 4, 5];
+
+let v2 = v1.iter()
+	.filter(|x| x % 2 == 0) // only take even numbers
+	.map(|x| x+1) // add one to each even number
+	.collect(); // consume the iterator
+ ```
