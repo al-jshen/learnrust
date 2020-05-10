@@ -1149,3 +1149,58 @@ let v2 = v1.iter()
 	.map(|x| x+1) // add one to each even number
 	.collect(); // consume the iterator
  ```
+
+ # Concurrency
+
+ **Concurrency** is where different parts of a program execute independently. **Parallelism** is where different parts of a program execute at the same time. For simplicity, use the term "concurrent" as a substitute for "concurrent and/or parallel" here. 
+
+## Threads 
+
+### Primer
+
+**Threads** are features that allow independent parts of a program to run simultaneously. Multithreading can improve performance by allowing the program to perform multiple tasks at the same time. However, some problems arise from the added complexity:
+- **race conditions**: when threads access data in an inconsistent order
+- **deadlocks**: when threads are waiting for each other to finish using a resource that the other thread has, which prevents them from continuing
+
+The standard library in Rust provides **1:1** threading (one operating system thread per one language thread) rather than a **green-threading M:N model** (M operating system threads per N language threads, where M and N are not necessarily equal). This is done to minimize the **runtime**, which means that binaries are smaller at the cost of features. 
+
+### Threads
+
+New threads are created with `thread::spawn`, which takes in a closure containing the code to be run in the new thread. By default, spawned threads are stopped when the main thread ends, regardless of whether the spawn thread has completed its task. We can wait for threads to finish before exiting by saving the return value of `thread::spawn` in a variable. It has type `JoinHandle`, and this has a method `join` which waits for its thread to finish. 
+
+```rust
+use std::thread;
+use std::time::Duration;
+
+fn main() {
+	let handle = thread::spawn(|| {
+		for i in 1..10 {
+			println!("{} from spawned thread", i);
+			thread::sleep(Duration::from_millis(1));
+		}
+	})
+
+	for i in 1..5 {
+		println!("{} from main thread", i);
+		thread::sleep(Duration::from_millis(1));
+	}
+
+	handle.join().unwrap();
+}
+```
+
+Rust will sometimes infer that the values in a closure passed to a new thread only need to be borrowed. However, sometimes we want to force the closure to take ownership. In that case, we can use `move` to do so. 
+
+```rust
+use std::thread;
+
+fn main() {
+    let v = vec![1, 2, 3];
+
+    let handle = thread::spawn(move || {
+        println!("Here's a vector: {:?}", v);
+    });
+
+    handle.join().unwrap();
+}
+```
