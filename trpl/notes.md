@@ -1204,3 +1204,71 @@ fn main() {
     handle.join().unwrap();
 }
 ```
+
+## Message Passing
+
+Rust accomplishes message passing by using **channels**, which are composed of a **transmitter** and a **receiver**. The transmitter calls methods with the data to send, and the receiver receives data. An open channel requires both ends to be available. The `std::sync::mpsc` module is used to create channels (`mpsc` stands for **multiple producer, single consumer**, which means that a channel can have multiple sending ends and a single receiving end that receives everything). 
+
+`mpsc::channel` is used to create a channel: it returns a tuple containing the transmitting end and the receiving end. The transmitting end has a `send` method which sends the data and returns a `Result<T, E>` (in case the receiving end has already been dropped and there is nowhere to send the data). `send` takes ownership of the parameter and sends it to the receiver, which prevents it from being used after it is sent. The receiving end has methods `recv` (blocks the main thread and waits for data to be sent down the channel, then returns it in a `Result<T, E>`) and `try_recv` (non-blocking, returns `Result<T, E>` immediately, potentially containing an `Ok` with the data). 
+
+```rust
+use std::sync::mpsc;
+use std::thread;
+
+fn main() {
+	let (tx, rx) = mpsc::channel(); // create channel
+
+	thread::spawn(move || { // spawn new thread and tell it to take ownership of tx
+		let val = String::from("hello");
+		tx.send(val).unwrap(); // send data 
+	});
+
+	let received = rx.recv().unwrap();
+	println!("{}", received);
+}
+```
+
+There can be multiple transmitting ends. This is done by cloning (deep copying) the transmitting end using `mpsc::Sender::clone`, and passing it to a different thread. This way, two threads transmit data to the same receiving end concurrently. The receiving end can also be treated as an iterator, and it will perform some task for each received value until the channel is closed. 
+
+```rust
+use std::sync::mpsc;
+use std::thread;
+use std::time::Duration;
+
+fn main() {
+    let (tx, rx) = mpsc::channel();
+	let tx2 = mpsc::Sender::clone(&tx);
+
+    thread::spawn(move || {
+        let vals = vec![
+            String::from("messages"),
+            String::from("from"),
+            String::from("first"),
+            String::from("thread"),
+        ];
+
+        for val in vals {
+            tx.send(val).unwrap();
+            thread::sleep(Duration::from_secs(1));
+        }
+    });
+
+	thread::spawn(move || {
+		let vals = vec![
+            String::from("more"),
+            String::from("stuff"),
+            String::from("being"),
+            String::from("sent"),
+        ];
+
+        for val in vals {
+            tx.send(val).unwrap();
+            thread::sleep(Duration::from_secs(1));
+        }
+	});
+
+    for received in rx {
+        println!("Got: {}", received);
+    }
+}
+```
