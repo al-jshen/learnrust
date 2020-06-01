@@ -1150,9 +1150,61 @@ let v2 = v1.iter()
 	.collect(); // consume the iterator
  ```
 
- # Concurrency
+# Smart Pointers
 
- **Concurrency** is where different parts of a program execute independently. **Parallelism** is where different parts of a program execute at the same time. For simplicity, use the term "concurrent" as a substitute for "concurrent and/or parallel" here. 
+**Smart pointers** not only cntain an address in memory (points to some data), but it also contains additional metadata. In some cases, smart pointers have ownership over the data that they point to. `String` and `Vec<T>` are examples of smart pointers. They own some memory and allow you to manipulate it, but they also have additional capabilities (eg. `String` is always UTF-8 valid).
+
+Smart pointers implement the `Deref` and `Drop` traits. `Deref` allows an instance of a smart pointer struct to behave like a reference. `Drop` allows for customization of behaviour when an instance of the smart pointer goes out of scope. 
+
+## `Box<T>`: Storing Data on the Heap
+
+Boxes allow you to store data on the heap instead of on the stack. They are often used when a size is unknown at compile time or when there is a large amount of data whose ownership needs to be transferred (and you don't want to copy all the data). 
+
+A box is created with `Box::new`. When it goes out of scope, both the box (ie. the pointer on the stack) and the data it points to (on the heap) are deallocated. 
+
+```rust
+let b = Box::new(5);
+println!("{}", b);
+```
+
+`Box<T>` is a pointer. Thus, its size is always known (ie. the size of the pointer doesn't change based on the (amount of) data it points to). A benefit of this is that boxes can be used to define recursive data structures (structures that hold another value of itself directly). Without using box, recursive data structures have a a potentially infinite size. If we instead use `Box<T>` to hold the structure, Rust will know how much size is required to store the value. 
+
+```rust 
+// the following has a potentially infinite size. not valid.
+enum LinkedList {
+  Cons(i32, LinkedList), // holds itself directly
+  Nil,
+}
+
+// the following has a known size and is valid. 
+enum LinkedList {
+  Cons(i32, Box<LinkedList>), // uses box to hold data
+  Nil,
+}
+```
+
+![infinite_cons](images/infinitecons.png){width=40%}
+\hfill
+![box_cons](images/boxcons.png){width=40%}
+\begin{figure}[!h]
+\begin{subfigure}[t]{0.4\textwidth}
+\caption{Recursive structure. Infinite `LinkedList` consisting of infinite `Cons` variants.}
+\end{subfigure}
+\hfill
+\begin{subfigure}[t]{0.4\textwidth}
+\caption{Using `Box` to prevent recursion with infinite size.}
+\end{subfigure}
+\end{figure}
+
+
+
+## `Rc<T>`: Reference Counting
+
+Rust uses the `Rc<T>` type to keep track of the number of references to a value (in single-threaded situations). This determines whether a value is still in use (ie. zero references means that the value can be dropped without leaving any references dangling). 
+ 
+# Concurrency
+
+**Concurrency** is where different parts of a program execute independently. **Parallelism** is where different parts of a program execute at the same time. For simplicity, use the term "concurrent" as a substitute for "concurrent and/or parallel" here. 
 
 ## Threads 
 
@@ -1272,3 +1324,9 @@ fn main() {
     }
 }
 ```
+
+## Mutexes 
+
+**Mutex (mutual exclusion)** is a way to share memory between threads. To get the data in a mutex, a thread requests access to the **mutex lock**, which keeps track of who has exclusive access to the data. The data **guards** the data it holds via the locking system. When using mutexes, the lock must be acquired before using the data, and when finished with the data, it must be unlocked so that other threads can acquire the lock. 
+
+
