@@ -1158,7 +1158,7 @@ Smart pointers implement the `Deref` and `Drop` traits. `Deref` allows an instan
 
 ## `Box<T>`: Storing Data on the Heap
 
-Boxes allow you to store data on the heap instead of on the stack. They are often used when a size is unknown at compile time or when there is a large amount of data whose ownership needs to be transferred (and you don't want to copy all the data). 
+**Boxes** allow you to store data on the heap instead of on the stack. They are often used when a size is unknown at compile time or when there is a large amount of data whose ownership needs to be transferred (and you don't want to copy all the data). 
 
 A box is created with `Box::new`. When it goes out of scope, both the box (ie. the pointer on the stack) and the data it points to (on the heap) are deallocated. 
 
@@ -1196,7 +1196,68 @@ enum LinkedList {
 \end{subfigure}
 \end{figure}
 
+# `Deref`
 
+The **dereference operator `*`** allows you to follow a reference to the value it points to. The `Box` type implements the `Deref` trait, which means that it can be treated like a reference. 
+
+```rust
+let x = 5;
+let y = &x;
+let z = Box::new(x);
+
+assert_eq!(5, x);
+assert_eq!(5, *y); // * dereferences y and gets the value it points to (5)
+assert_eq!(5, *z); // works in the same way as above
+```
+
+In order to create custom types that can also be treated like references, implement the `Deref` trait and the special `deref` method. 
+
+```rust 
+use std::ops::Deref;
+
+struct MyBox<T>(T); // new tuple struct 
+
+impl<T> MyBox<T> {
+  fn new(x: T) -> MyBox<T> {
+    MyBox(x)
+  }
+}
+
+impl<T> Deref for MyBox<T> {
+  type Target = T; 
+  
+  fn deref(&self) -> &T {
+    &self.0
+  }
+}
+
+fn main() {
+  let x = 5;
+  let y = MyBox::new(x);
+
+  assert_eq!(5, x);
+  assert_eq!(5, *y);
+}
+```
+
+When `*y` is called, Rust actually runs `*(y.deref())` (where the `*` is run only once ie. no recursion). `deref` returns a reference because we don't want to take ownership of the inner value inside `MyBox<T>` in most cases. 
+
+### Deref Coercion
+
+**Deref coercion** converts types that implement the `Deref` trait into references of another type. For example, it can convert `&String` to `&str` because `String` implements `Deref` and returns `str`. Rust does this automatically.
+
+```rust
+fn hello(name: &str) {
+  println!("hello {}", name);
+}
+
+fn main() {
+  let n = MyBox::new(String::from("testing"));
+  hello(&n); // coercion: &MyBox<String> -> &String -> &str
+  // without coercion, we would have to write the following:
+  hello(&(*m)[..]);
+}
+```
 
 ## `Rc<T>`: Reference Counting
 
