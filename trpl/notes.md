@@ -1259,6 +1259,49 @@ fn main() {
 }
 ```
 
+## `Drop`
+
+`Drop` is a trait which allows you to customize what happens when a value goes out of scope. The `Drop` trait requires the special method `drop` to be implemented. 
+
+```rust
+struct CustomSmartPointer {
+    data: String,
+}
+
+impl Drop for CustomSmartPointer {
+    fn drop(&mut self) {
+	println!("dropped data `{}`", self.data);
+    }
+}
+
+fn main() {
+    let a = CustomSmartPointer {
+	data: String::from("first");
+    };
+    let b = CustomSmartPointer {
+	data: String::from("second");
+    };
+}
+
+// output is:
+// >> dropped data `second`
+// >> dropped data `first`
+```
+
+Note that variables are dropped in the reverse order of their creation. In the above case, `b` is dropped before `a`. When either `CustomSmartPointer` is dropped, the special `drop` method is called. 
+
+In order to drop a value early (before it goes out of scope and automatically gets dropped), use the `std::mem::drop` function instead of the `drop` method. It is included in the prelude, so just call `drop`, and pass the variable to be dropped.
+
+```rust
+fn main() {
+    let a = CustomSmartPointer {
+	data: String::from("first")
+    };
+    drop(a);
+    println!("CustomSmartPointer dropped before end of main");
+}
+```
+
 ## `Rc<T>`: Reference Counting
 
 Rust uses the `Rc<T>` type to keep track of the number of references to a value (in single-threaded situations). This determines whether a value is still in use (ie. zero references means that the value can be dropped without leaving any references dangling). 
