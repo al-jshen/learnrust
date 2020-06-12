@@ -1304,7 +1304,54 @@ fn main() {
 
 ## `Rc<T>`: Reference Counting
 
-Rust uses the `Rc<T>` type to keep track of the number of references to a value (in single-threaded situations). This determines whether a value is still in use (ie. zero references means that the value can be dropped without leaving any references dangling). 
+Rust uses the `Rc<T>` type to keep track of the number of references to a value (in single-threaded situations). This determines whether a value is still in use (ie. zero references means that the value can be dropped without leaving any references dangling). `Rc<T>` is used when we want to share data, but don't know who will be the last to use it. 
+
+In order to share data, we create an `Rc<T>` value, and then pass a reference of this data to `Rc::clone`, which will increment the reference count. Note that this clone method does *not* do a deep copy. We can get the number of references by calling the `Rc::strong_count` method and passing in a reference of the `Rc<T>` object. 
+
+```rust
+// THIS DOESNT WORK!
+
+enum LinkedList {
+    Cons(i32, Box<LinkedList>), // uses Box
+    Nil,
+}
+
+fn main() {
+    let a = Cons(2, Box::new(Cons(3, Box::new(Nil))));
+
+    // ownership of `a` is transferred into `b`
+    let b = Cons(3, Box::new(a));
+
+    // this will fail because `a` has already been moved
+    let c = Cons(4, Box::new(a)); 
+}
+
+// THIS WORKS
+
+use std::rc::Rc; 
+
+enum LinkedList {
+    Cons(i32, Rc<LinkedList>), // uses Rc instead of Box
+    Nil,
+}
+
+fn main() {
+    let a = Rc::new(Cons(2, Rc::new(Cons(3, Rc::new(Nil)))));
+    println!("references after creating a: {}", Rc::strong_count(&a)); // 1
+
+    // increments the references to `a` by 1
+    let b = Cons(3, Rc::clone(&a));
+
+    println!("references after creating b: {}", Rc::strong_count(&a)); // 2
+    
+    { // create a new scope
+	let c = Cons(4, Rc::clone(&a)); 
+	println!("references after creating c: {}", Rc::strong_count(&a)); // 3
+    } // c goes out of scope here. reference count drops to 2
+
+    println!("references after c goes out of scope: {}", Rc::strong_count(&a)); // 2
+}
+```
  
 # Concurrency
 
