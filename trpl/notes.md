@@ -1545,3 +1545,7 @@ fn main() {
 ```
 
 Note that `Mutex<T>` provides interior mutability like `RefCell<T>` (the `counter` value is immutable, but the value inside can be mutated). 
+
+## `Send` and `Sync`
+
+These are two traits from `std::marker` which relate to concurrency. A type with the `Send` trait allows for its ownership to be transferred between threads, and a type with the `Sync` trait allows for it to be referenced from multiple threads. Note that a type `T` is `Sync` if `&T` is send. Primitives are `Send` and `Sync`, and types composed entirely of `Send`/`Sync` are also `Send`/`Sync`. 
