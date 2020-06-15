@@ -1,24 +1,20 @@
-use std::sync::{Arc, Mutex};
-use std::thread;
+use std::cell::RefCell;
+
+#[derive(Debug)]
+struct Test {
+    data: u8,
+}
 
 fn main() {
-    let counter = Arc::new(Mutex::new(0));
-    let mut handles = vec![];
-
-    for _ in 0..10 {
-        let counter = Arc::clone(&counter);
-        let handle = thread::spawn(move || {
-            let mut num = counter.lock().unwrap();
-            *num += 1;
-            println!("{:?}", num);
-        });
-
-        handles.push(handle);
+    let r = vec![RefCell::new(Test { data: 0 }), RefCell::new(Test { data: 1 })];
+    {
+        let mut test1 = r[0].borrow_mut();
+        let mut test2 = r[1].borrow_mut();
+        test1.data += 1;
+        test2.data += 2;
+        println!("{:?}", test1);
+        println!("{:?}", test2);
     }
-
-    for handle in handles {
-        handle.join().unwrap();
-    }
-
-    println!("total: {}", *counter.lock().unwrap());
+    println!("{:?}", &r);
 }
+
