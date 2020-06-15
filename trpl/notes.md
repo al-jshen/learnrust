@@ -1363,6 +1363,18 @@ Normally, ownership rules (eg. can't have a mutable and an immutable reference a
 
 When we create references to a `RefCell` object, we use the methods `.borrow` and `.borrow_mut`, which create `Ref<T>` and `RefMut<T>` smart pointer types respectively. The normal borrowing rules for `&` and `&mut` are enforced (but at runtime instead of at compile time). 
 
+```rust
+use std::cell::RefCell;
+
+fn main() {
+    let r = RefCell::new(0);
+    {
+        let mut borrow = r.borrow_mut();
+        *borrow = 5;
+    }
+    println!("{:?}", r);
+}
+```
 ## Combining `Rc<T>` and `RefCell<T>`
 
 Remember that `Rc<T>` allows you to have multiple owners of some data, but it only gives immutable access to that data. If you have `Rc<T>` holding `RefCell<T>`, then you can have a value that can have multiple owners *and* have mutable access to the data. 
