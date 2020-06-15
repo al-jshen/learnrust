@@ -1353,6 +1353,21 @@ fn main() {
 }
 ```
  
+## `RefCell<T>` and Interior Mutability
+
+Normally, ownership rules (eg. can't have a mutable and an immutable reference at the same time) are enforced a compile time. Using `RefCell<T>`, these rules are enforced at runtime. This means you can break these rules and the program will still run (but it will panic). The purpose of using `RefCell<T>` is to get around the conservative compiler, which may incorrect reject memory-safe programs, when you are sure that you are following the borrowing rules correctly, but the compiler doesn't understand that. 
+
+`RefCell<T>` is a way to mutate immutable objects???
+
+`RefCell<T>` is often used for interior mutability. We might want some outer immutable container holding another object which we want to be mutable. In this case, `RefCell` is appropriate. 
+
+When we create references to a `RefCell` object, we use the methods `.borrow` and `.borrow_mut`, which create `Ref<T>` and `RefMut<T>` smart pointer types respectively. The normal borrowing rules for `&` and `&mut` are enforced (but at runtime instead of at compile time). 
+
+## Combining `Rc<T>` and `RefCell<T>`
+
+Remember that `Rc<T>` allows you to have multiple owners of some data, but it only gives immutable access to that data. If you have `Rc<T>` holding `RefCell<T>`, then you can have a value that can have multiple owners *and* have mutable access to the data. 
+
+
 # Concurrency
 
 **Concurrency** is where different parts of a program execute independently. **Parallelism** is where different parts of a program execute at the same time. For simplicity, use the term "concurrent" as a substitute for "concurrent and/or parallel" here. 
@@ -1478,6 +1493,55 @@ fn main() {
 
 ## Mutexes 
 
-**Mutex (mutual exclusion)** is a way to share memory between threads. To get the data in a mutex, a thread requests access to the **mutex lock**, which keeps track of who has exclusive access to the data. The data **guards** the data it holds via the locking system. When using mutexes, the lock must be acquired before using the data, and when finished with the data, it must be unlocked so that other threads can acquire the lock. 
+**Mutex (mutual exclusion)** is a way to share memory between threads. To get the data in a mutex, a thread requests access to the **mutex lock**, which keeps track of who has exclusive access to the data. This is like multiple people requesting access to get a single key which unlocks some locker. The mutex **guards** the data it holds via the locking system. When using mutexes, the lock must be acquired before using the data, and when finished with the data, it must be unlocked so that other threads can acquire the lock. 
 
+A `Mutex<T>` is created with the `new` method, and a lock is acquired with the `lock` method. The `lock` method returns a `LockResult` type, which needs to be unwrapped. This gives a smart pointer called `MutexGuard`, which implements `Deref` such that it points to the inner data. It also implements `Drop` to automatically release the mutex lock when the value goes out of scope. 
 
+```rust
+use std::sync::Mutex;
+
+fn main() {
+    let m = Mutex::new(5);
+
+    {
+	let mut num = m.lock().unwrap();
+	// unwraps the LockResult into a MutexGuard
+	*num = 6;
+	// deref the MutexGuard to get the inner data
+    } // MutexGuard goes out of scope and releases the lock
+
+    println!("{:?}", m);
+    // Mutex { data: 6 }
+}
+```
+
+If we want to use a mutex with multiple threads, it needs to be passed to each thread. So, we need to use `Rc<T>` to allow multiple owners. However, `Rc<T>` cannot be used across multiple threads (not **thread-safe**). There is a thread-safe equivalent called `Arc<T>` (where the `a` stands for *atomic*). Atomics come at a cost performance-wise and should only be used for multithreaded situations. `Arc<T>` and `Rc<T>` are otherwise used in the same manner (same API). 
+
+```rust
+use std::sync::{Arc, Mutex};
+use std::thread;
+
+fn main() {
+    let counter = Arc::new(Mutex::new(0));
+    let mut handles = vec![];
+
+    for _ in 0..10 {
+        let counter = Arc::clone(&counter);
+        let handle = thread::spawn(move || {
+            let mut num = counter.lock().unwrap();
+            *num += 1;
+            println!("{:?}", num);
+        });
+
+        handles.push(handle);
+    }
+
+    for handle in handles {
+        handle.join().unwrap();
+    }
+
+    println!("total: {}", *counter.lock().unwrap());
+}
+```
+
+Note that `Mutex<T>` provides interior mutability like `RefCell<T>` (the `counter` value is immutable, but the value inside can be mutated). 
