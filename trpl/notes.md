@@ -155,7 +155,7 @@ for i in 0..10 {
 	println!("{}", x);
 }
 ```
-where `0..10` gives an iterable range.  
+where `0..10` gives an iterable range that is inclusive of the first number and exclusive of the second number. You can also use `0..=10` to produce a range that is inclusive on both ends.
 
 Use `.enumerate()` to keep track of how many times you have looped:
 ```rust
@@ -547,14 +547,12 @@ m.call();
 
 ```rust
 enum Option<T> {
-	Some(T),
-	None,
+    Some(T),
+    None,
 }
 ```
 
 Note that a variable of type `Option<T>` and one of type `T` are not the same. They cannot interact like two `T` variables can. 
-
-DO GENERICS FIRST. THEN REWRITE THIS. 
 
 ## match
 
@@ -562,36 +560,56 @@ DO GENERICS FIRST. THEN REWRITE THIS.
 
 ```rust
 enum issue_year {
-	2000, 
-	2001,
-	2002,
-	...
+    2000, 
+    2001,
+    2002,
 }
 enum coin {
-	penny,
-	nickel,
-	dime(issue_year),
-	quarter,
-	loonie,
-	toonie,
+    penny,
+    nickel,
+    dime(issue_year),
+    quarter,
+    loonie,
+    toonie,
 }
 
 fn get_small_vals(c: coin) -> u8 {
-	match c {
-		coin::penny => 1,
-		coin::nickel => 5,
-		coin::dime(issue_year) => {
-			println!("This dime was issued in {}", issue_year);
-			10
-		},
-		coin::quarter => 25,
-		_ => {
-			println!("value too large");
-			0
-		},
-	}
+    match c {
+	coin::penny => 1,
+	coin::nickel => 5,
+	coin::dime(issue_year) => {
+	    println!("This dime was issued in {}", issue_year);
+	    10
+	},
+	coin::quarter => {
+	    println!("\"quarter\" variant has no data to destructure");
+	    25
+	},
+	_ => {
+	    println!("value too large");
+	    0
+	},
+    }
 }
 ```
+
+It is also possible to match multiple patterns or a range:
+
+```rust
+let x = 5;
+
+match x {
+    1 | 2 => println!("one or two"),
+    _ => println!("anything else"),
+}
+
+let y = 'e';
+
+match y {
+    'a'..'j' => println!("early ASCII letter"),
+    'k'..'z' => println!("late ASCII letter"),
+    _ => println!("something else"),
+}
 
 
 # Generics 
@@ -1196,7 +1214,7 @@ enum LinkedList {
 \end{subfigure}
 \end{figure}
 
-# `Deref`
+## `Deref`
 
 The **dereference operator `*`** allows you to follow a reference to the value it points to. The `Box` type implements the `Deref` trait, which means that it can be treated like a reference. 
 
@@ -1561,3 +1579,342 @@ Note that `Mutex<T>` provides interior mutability like `RefCell<T>` (the `counte
 ## `Send` and `Sync`
 
 These are two traits from `std::marker` which relate to concurrency. A type with the `Send` trait allows for its ownership to be transferred between threads, and a type with the `Sync` trait allows for it to be referenced from multiple threads. Note that a type `T` is `Sync` if `&T` is send. Primitives are `Send` and `Sync`, and types composed entirely of `Send`/`Sync` are also `Send`/`Sync`. 
+
+# Patterns
+
+## Refutability
+
+**Irrefutable patterns** are ones that will match any value, whereas a pattern that can fail to match for some possible value is **refutable**. For example, in `if let Some(x) = some_value`, `Some(x)` is a refutable value because if the value in `some_value` is `None` rather than `Some`, the `Some(x)` pattern will not match. Function parameters, `let` statements, and `for` loops can only accept irrefutable patterns, because Rust won't know what to do in the case that there is no match. However, there is a way to quickly fix this: instead of `let`, you can use `if let`, and then the program will only run if the match succeeds. 
+
+## Ingoring Patterns with `_` and `..`
+
+`_` is used to ignore patterns or variables. 
+
+```rust
+fn foo(_: i8, y: i8) {
+    println!("this function only uses the \"y\" parameter: {}", y);
+}
+
+fn main() {
+    foo(1, 2);
+}
+```
+
+`_` can also be used as a prefix to indicate unused variables. Note that there is a difference between, for example, `_x` and `_`: using `_x` still binds the value to the variable, whereas `_` doesn't bind at all. 
+
+`..` is used with values that have many parts, and where we only use a few parts. Using `..` avoids needing to list `_` for each of the unused variables. Instead, it ignores any parts of the value that haven't been explicitly matched. However, it must be used unambiguously. It will not work if the explicit match can take more than one possible value. 
+
+```rust
+struct Point3D {
+    x: i32,
+    y: i32,
+    z: i32,
+}
+
+let p = Point { x: 23, y: 1, z: -23 };
+
+match p {
+    Point { x, .. } => println!("x is {}", x);
+}
+```
+
+## Match Guard
+
+Match guards provide a way to further refine pattern matching.They allow us to use an additional `if` condition inside a match arm.
+
+```rust
+let x = Some(8);
+let y = 10;
+
+match x {
+    Some(n) if x < 5 => println!("less than five: {}", n),
+    Some(n) if n == y => println!("matched, n={}", n),
+    _ => println!("default case: x={:?}", x),
+}
+// will print "default case: x=Some(8)"
+```
+
+## `@` Bindings
+
+`@` allows you to create a variable holding some value while testing the value for some condition at the same time. They can do what match guards do, and vice versa.
+
+```rust
+enum Message {
+    Hello { id: i32 },
+}
+
+fn main() {
+    let msg = Message::Hello { id: 10 };
+
+    match msg {
+	// using match guards
+        Message::Hello { id } if id < 7 => println!("id in range: id={}", id),
+	// using the @ bindings. binds the variable to idvar instead
+        Message::Hello { id: idvar @ 8..=15 } => { 
+	    println!("id in another range: id={}", idvar), 
+	}
+        Message::Hello { id } => println!("some other range: {}", id),
+    }
+}
+```
+
+# Unsafe Rust
+
+Unsafe code tells the compiler that you will take responsibility for upholding memory safety principles. It isn't necessarily bad to use unsafe code, as long as you are sure that are accessing and managing memory properly. This allows you to have five "superpowers":
+
+- derefence a raw pointer
+- call an unsafe function or method
+- access or modify a mutable static variable
+- implement an unsafe trait
+- access fields of unions
+
+## Dereferencing a Raw Pointer
+
+Raw pointers come in two flavours: immutable (`*const T`) and mutable (`*mut T`). Note that the `*` is part of the name, not a dereference operator. Raw pointers don't uphold the memory guarantees that Rust usually enforces. For example, you can have multiple mutable pointers to the same location, raw pointers can be null, and they don't automatically clean themselves up. 
+
+Creating a raw pointer isn't unsafe. Accessing the value that it points to is when we might run into trouble, and we require use of an `unsafe` block. 
+
+```rust
+let mut num = 5;
+let r1 = &mut num as *mut i32;
+let r2 = &num as *const i32; // this isn't allowed without normal references!
+
+unsafe {
+    println!("r1 is {}", *r1);
+    println!("r2 is {}", *r2);
+}
+```
+
+## Calling an Unsafe Function or Method
+
+Starting a function definition with `unsafe` marks it as unsafe. This means that we take responsibility for upholding an contracts that the function has, and that Rust won't guarantee that we do so. `unsafe` functions must be called within `unsafe` blocks, but calling other `unsafe` functions from within an `unsafe` function doesn't require another explicit `unsafe` block. 
+
+```rust
+unsafe fn unsafe_fn() {
+    println!("this function is unsafe");
+}
+
+unsafe {
+    unsafe_fn();
+}
+```
+
+Code that we know is safe (but Rust doesn't) is when we should turn to `unsafe`. We can wrap up `unsafe` code into a safe function, and call it normally. 
+
+### Foreign Function Interface (FFI)
+
+Rust can interact with code written in another language. This is done with the keyword `extern`. Functions declared from within `extern` are always unsafe because other languages don't enforce Rust's rules and guarantees. 
+
+```rust
+extern "C" {
+    fn abs(input: i32) -> i32; // "abs" is a C function
+}
+
+fn main() {
+    unsafe {
+	println!("absolute value of -3 according to C: {}", abs(-3));
+    }
+}
+```
+
+It is also possible to call Rust functions from other languages. We use `extern` to mark a function (instead of a block) along with the `#[no_mangle]` annotation to prevent Rust from changing the name of the function. 
+
+```rust
+#[no_mangle]
+pub extern "C" fn call_from_c() {
+    println!("calling a Rust function from C");
+}
+```
+
+## Accessing or Modifying Mutable Static Variables
+
+Global variables in Rust are called **static variables**. Their types must be annotated upon declaration. Accessing and mutating them is unsafe. 
+?
+```rust
+static mut COUNTER: u32 = 0;
+
+fn increment_count(inc: u32) {
+    unsafe {
+	COUNTER += inc;
+    }
+}
+
+fn main() {
+    increment_counter(3);
+
+    unsafe {
+	println!("COUNTER: {}", COUNTER);
+    }
+}
+```
+
+## Unsafe Traits
+
+A trait is unsafe when at least one of its methods has some invariant that the compiler can't verify. If a trait is declared as unsafe, then any corresponding implementations of the trait must also be marked as unsafe. 
+
+```rust
+struct Test {
+    x: i32,
+}
+
+unsafe trait Foo {
+    fn get_x(&self) -> i32;
+}
+
+unsafe impl Foo for Test {
+    fn get_x(&self) -> i32 {
+        self.x
+    }
+}
+
+fn main() {
+    let test = Test { x: 5 };
+    println!("{}", test.get_x());
+}
+```
+
+# Advanced Traits
+
+## Associated Types
+
+Associated types are similar to generics in that they allow for a trait method to use a placeholder type that is not known upon declaration of the trait. They are later declared during implementation. However, using associated types, there can only be one implementation, whereas using generics, there can be multiple implementations, each taking a different type. This means that annotation isn't necessary for associated types. 
+
+```rust
+struct Counter {
+    count: u32,
+}
+
+trait Iterator {
+    type Item; // associated type
+    fn next(&mut self) -> Option<Self::Item>;
+}
+
+impl Iterator for Counter {
+    type Item = u32; // declaring associated type here
+
+    fn next(&mut self) -> Option<Self::Item> {
+	if self.count < 5 {
+	    self.count += 1;
+	    Some(self.count)
+	} else {
+	    None
+	}
+    }
+}
+```
+
+## Default Generic Type Parameters and Operator Overloading
+
+When using generic type parameters, a default concrete type can be specified. This is done with the syntax `<PlaceholderType=ConcreteType>`. 
+
+**Operator overloading** is customizing the behaviour of an operator (eg. `+`) in particular situations. The operators in `std::ops` can be overloaded by implementing the traits associated with the particular operator. For example, the trait associated with `+` is `Add`, which is defined with default generic types. 
+
+```rust
+trait Add<RHS=Self> { // "Self" is the type of "self", used as the default
+    type Output;
+    fn add(self, rhs: RHS) -> Self::Output; // Self:: because Output isn't implicitly scoped
+}
+
+struct Point {
+    x: i32,
+    y: i32,
+}
+
+impl Add for Point {
+    type Output = Point;
+    fn add(self, other: Point) -> Point {
+	Point {
+	    x: self.x + other.x,
+	    y: self.y + other.y,
+	}
+    }
+}
+
+fn main() {
+    let p35 = Point {x: 2, y: 1} + Point {x: 1, y: 4};
+}
+```
+
+## Fully Qualified Syntax
+
+When a type implements multiple traits, with potentially more than one implementation of a method with the same name, we need to be explicit about which method we want to call. By default, Rust calls the method that is directly implemented on the type. If we want to override this, we use the **fully qualified syntax**:
+
+```rust
+struct Dog;
+
+trait Animal {
+    fn name() -> String;
+}
+
+impl Dog {
+    fn name() -> String {
+	String::from("dog name");
+    }
+}
+
+impl Animal for Dog {
+    fn name() -> String {
+	String::from("animal name");
+    }
+}
+
+fn main() {
+    println!("dog name method: {}", Dog::name());
+    println!("animal name method: {}", <Dog as Animal>::name());
+}
+```
+
+## Supertraits
+
+Supertraits are traits that build on other traits (kind of like inheritance). For a trait `U` that is a supertrait of `Z`, every `T` that implements `U` also implements `Z`. This differs slightly from trait bounds in that trait bounds are like restrictions of traits, whereas supertraits are a subset of traits. When creating a supertrait, the methods of the base trait are accessible.
+
+```rust
+use std::fmt;
+
+trait SuperPrint: fmt::Display {
+    fn super_print(&self) {
+	let output = self.to_string() // a method from Display
+	// ...
+    }
+}
+```
+
+## Newtype Pattern
+
+Rust's **orphan rule** prevents you from implementing external traits on external types. At least one of them must be local to your crate. To get around this, you can use the **newtype pattern**, which involves creating a thin wrapper around the type using a tuple struct. There is no performance penalty for doing this. The trait is implemented on the wrapper, and then the value inside is accessed as needed.
+
+```rust
+use std::fmt;
+
+struct Wrapper(Vec<String>);
+
+impl fmt::Display for Wrapper {
+    fn fmt(&self, f: &mut fmt:Formatter) -> fmt::Result {
+	// use tuple dot notation self.0 to get the Vec inside Wrapper
+	write!(f, "[{}]}", self.0.join(", ")) 
+    }
+}
+
+fn main() {
+    let w = Wrapper(vec![String::from("hello"), String::from("world")]);
+    println!("w = {}", w);
+}
+// w = [hello, world]
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
