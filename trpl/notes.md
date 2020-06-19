@@ -1131,17 +1131,36 @@ mod tests {
 
 ## Closures
 
-**Closures** are lambda (anonymous) functions, defined with some parameters in `||`. Since they are usually short and applied only to specific situations rather than general ones, the compiler is usually able to infer the parameter types, and so type annotations are unnecessary. 
+**Closures** are lambda (anonymous) functions, defined with some parameters in `||`. Since they are usually short and applied only to specific situations rather than general ones, the compiler is usually able to infer the parameter types, and so type annotations are unnecessary. Closures are able to capture values from the scope that they are defined in. 
 
 ```rust
 
 let f = |x| x+2; 
-let g = |x| {
-	x+2
-};
+let g = |x: u32| -> u32 { x+2 }; // equivalent
 
 println!("{}", f(2));
 ```
+
+Type inference works with the first concrete type that is passed to the closure, in the sense that if you try to call the same untyped closure on two different types, it will not work:
+
+```rust
+let example = |x| x;
+
+let s = example("hello".to_string());
+let n = example(5); // won't work!
+```
+
+### `Fn` Traits
+
+All closures implement at least one of the traits `Fn`, `FnMut`, or `FnOnce`. 
+
+- `FnOnce`: takes ownership of the variable that it captures from its enclosing scope and consumes it. 
+- `FnMut`: mutably borrows the value from the environment
+- `Fn`: immutably borrows the value from the environment
+
+Usually you can just start with `Fn` and switch to one of the others if the compiler tells you to do so. 
+
+You can force a closure to take ownership of the value it uses its environment by using the `move` keyword before the parameter list (eg. `move |x|`).
 
 ## Iterators
 
@@ -1955,9 +1974,23 @@ fn generic<T: ?Sized>(t: &T) {
 }
 ```
 
+# Advanced Functions and Closures
 
+## Function Pointers
 
+Functions can be passed to other functions as arguments. When doing so, functions coerce to the type `fn` (called a **function pointers**). The types of the passed function's inputs and outputs, as well as the types of the outer function's inputs and outputs should be specified. 
 
+```rust
+fn add_one(x: i32) -> i32 {
+    x + 1
+}
+
+fn do_twice(f: fn() -> i32, arg: i32) -> i32 {
+    f(arg) + f(arg)
+}
+```
+
+# Macros
 
 
 
