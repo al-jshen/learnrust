@@ -405,13 +405,14 @@ let last_two = &a[3..] // slice with "lo"
 A string slice is denoted `&str`. String literals are actually string slices. This is why they are immutable: they are immutable references. 
 
 When writing a function to take in a string, it is better to use `&str` as the parameter instead of `&String`. Using `&str` means that if we have a `String`, we can pass a slice of the entire string, but if we only have a slice, then we can just pass the slice. It allows for more general use without any loss of functionality. 
+
 ```rust 
 fn some_fn(s: &str) -> &str { // this is better.
 ...
 fn some_fn(s: &String) -> &str { // dont do this.
 ```
 
-# Lifetimes
+## Lifetimes
 
 Every reference has a **lifetime**, which is the scope for which that reference is valid. This is done to prevent dangling references. Most of the times lifetimes are determined by Rust's compiler (via **lifetime elision rules**). Sometimes we need to explicitly annotate lifetimes in order to ensure that the underlying value being referenced lives at least as long as the reference itself(? opposite?) (it doesn't get dropped before the reference does, which would leave the reference dangling). Lifetime parameters can be generic (denoted by `<>`), so that functions can accept references with any lifetime. Lifetimes are given by `'`, and conventionally go by alphabetical order (ie. `'a`, `'b`, etc.). Lifetimes are really just to make life easier for the compiler. They don't modify the actual lifetimes. 
 
@@ -421,14 +422,13 @@ The following function signature says that for some lifetime `'a`, the function 
 fn longest<'a'>(x: &'a str, y: &'a str) -> &'a str {
 ```
 
-
 ```rust
 struct Excerpt<'a> {
-	part: &'a str,
+    part: &'a str,
 }
 ```
 
-## Static 
+### Static 
 
 A special lifetime is the `'static` lifetime, which means that the reference can live for the entire duration of the program. All string literals have `'static` lifetime, and can be annotated explicitly using `&'static str`. 
 
@@ -1677,7 +1677,7 @@ Creating a raw pointer isn't unsafe. Accessing the value that it points to is wh
 ```rust
 let mut num = 5;
 let r1 = &mut num as *mut i32;
-let r2 = &num as *const i32; // this isn't allowed without normal references!
+let r2 = &num as *const i32; // this isn't allowed with normal references!
 
 unsafe {
     println!("r1 is {}", *r1);
@@ -1902,6 +1902,60 @@ fn main() {
 // w = [hello, world]
 
 ```
+
+Newtypes can be used for type safety and abstraction. For example, we can create wrappers indicating units: `Meters` and `Centimeters` might both wrap `u32`, but we can have a function with a parameter of type `Meter`, and it will ensure that we don't put in the wrong type. We can also use newtypes to abstract some implementation details of a type: we can have a new public API that is different from the API of the private inner type. 
+
+# Advanced Types
+
+## Type Aliases
+
+We can create aliases, or synonyms, for types. This is convenient for reducing repetition in places where we have lengthy types. For example, if we have `Box<dyn Fn() + Send + 'static>`, we might do:
+
+```rust
+type Thunk = Box<dyn Fn() + Send + 'static>;
+
+let f: Thunk = Box::new(|| println!("hi"));
+
+fn takes_long_type(f: Thunk) {
+}
+
+// instead of 
+fn takes_long_type(f: Box<dyn Fn() + Send + 'static>) {
+}
+```
+
+
+## Never/Empty Type
+
+Rust has a special type named `!`, which is called the empty type or the never type. It is a type used for functions that will never return. It contains no values.
+
+```rust
+fn bar() -> ! {
+    // ...
+}
+```
+is read as "the function `bar` returns never." Such functions are called **diverging functions**. Since we can't create values of the type `!`, the function will never return. `continue`, `panic!`, and `loop` have the `!` type.
+
+## Dynamically Sized Types and `Sized`
+
+Rust needs to known how much memory to allocate for any value of a particular type, and all values of a type must use the same amount of memory. **Dynamically sized types (DSTs)** are types with sizes that are only known are runtime (not a compile time). `str` is an example of a DST. Because its size is not known, we cannot create variables with type `str`. Otherwise, we would have to give all `str` values the size equivalent to the size used by the largest `str` (big waste of space). 
+
+To deal with DSTs, we put them behind pointers. For example, we use `&str` instead of `str`. Rust has a special `Sized` trait to determine whether a a type's size is known at compile time, and for types which may or may not be sized, we use `?Sized`. In this case, we need to use the type behind some pointer. 
+
+```rust
+fn generic<T>(t: T) {
+}
+
+// is the same as this: 
+fn generic<T: Sized>(t: T) {
+}
+
+// here, we need to use a pointer: 
+fn generic<T: ?Sized>(t: &T) {
+}
+```
+
+
 
 
 
