@@ -1992,6 +1992,42 @@ fn do_twice(f: fn() -> i32, arg: i32) -> i32 {
 
 # Macros
 
+Macros a way of writing code that writes other code, which is called **metaprogramming**. Macros like `println!` and `vec!` expand out to produce more code. One example of a benefit of macros is that they can take variable numbers of parameters, whereas functions take a fixed number.
+
+## Declarative Macros with `macro_rules!`
+
+Declarative macros (or just macros) are similar to `match` expressions: they compare a value to patterns, and then uses the value to replace the template code associated with the pattern if there is a match. Macros are created with `macro_rules!` and the `#[macro_export]` annotation.
+
+```rust
+#[macro_export]
+macro_rules! vec {
+    ( $( $x:expr ),* ) => {
+	let mut temp_vec = Vec::new();
+	$(
+	    temp_vec.push($x);
+	)*
+	temp_vec
+    }
+}
+```
+- The `( $( $x:expr ),* )` is the pattern that we define.
+- The `$x:expr` says to match an expression (what we pass in when we call the macro) and assign the expression to `x`. We later use this matched value in `temp_vec.push($x)`.
+- The `,` indicates that there is an *optional* comma after the expression.
+- The `*` is like a regex `*`: we match the previous code zero or more times. 
+- Every time we hit a match, the `$()*` is run. 
+
+## Procedural Macros, Attribute-like Macros
+
+some complicated looking stuff
+
+```rust
+#[derive(ProceduralMacro)]
+
+#[custom(AttributeMacro)]
+```
+
+
+
 
 
 
